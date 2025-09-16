@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FarmerInfo — All-in-One Agriculture Tool</title>
+  <meta name="description" content="Crop info, seed & milk calculators, machinery catalogue and farm tips — all in one single page." />
+  <style>
+    :root{--accent:#2b8a3e;--muted:#6b7280;--card:#fff;--bg:#f3f4f6}
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0; background:var(--bg); color:#111}
+    header{background:linear-gradient(90deg,#0f9d58, #2bb673); color:white;padding:28px 20px}
+    .container{max-width:1100px;margin:18px auto;padding:0 18px}
+    h1{margin:0;font-size:26px}
+    .hero-sub{opacity:.95;margin-top:6px;color:rgba(255,255,255,0.95)}
+    nav{margin-top:12px}
+    .grid{display:grid;gap:16px}
+    .cols-3{grid-template-columns:repeat(3,1fr)}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,.06);padding:16px}
+    .row{display:flex;gap:12px;align-items:center}
+    button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:8px;cursor:pointer}
+    input,select,textarea{padding:10px;border-radius:8px;border:1px solid #e6e9ee;width:100%}
+    .small{font-size:13px;color:var(--muted)}
+    .flex{display:flex}
+    .col-2{grid-template-columns:1fr 1fr}
+    footer{padding:20px;text-align:center;color:var(--muted)}
+    /* responsive */
+    @media (max-width:900px){.cols-3{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:640px){.cols-3{grid-template-columns:1fr} header{padding:18px} .container{padding:0 12px}}
+    /* crop list */
+    .crop{display:flex;gap:12px;align-items:flex-start}
+    .badge{background:#eef7ee;color:var(--accent);padding:6px 8px;border-radius:8px;font-weight:600}
+    .machine-img{width:100%;height:120px;object-fit:cover;border-radius:8px}
+    .center{display:flex;align-items:center;justify-content:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>FarmerInfo — All in one agriculture toolkit</h1>
+      <div class="hero-sub">Crop encyclopedia • Seed & Milk calculators • Machinery catalog • Tips & contact</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section style="margin-top:18px" class="grid cols-3">
+      <!-- Quick tools -->
+      <div class="card">
+        <h3>Seed Calculator</h3>
+        <p class="small">Enter your field area and seed rate to get required seed quantity.</p>
+        <div style="margin-top:10px" class="grid" id="seedCalc">
+          <label>Area <small class="small">(hectares)</small><input id="areaH" type="number" min="0" step="0.01" placeholder="e.g. 1.5"></label>
+          <label>Seed rate <small class="small">(kg per hectare)</small><input id="seedRate" type="number" min="0" step="0.1" placeholder="e.g. 80"></label>
+          <div class="row"><button onclick="calcSeed()">Calculate</button><div id="seedRes" class="small" style="margin-left:8px"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Milk Income Calculator</h3>
+        <p class="small">Calculate daily/monthly income from milk production.</p>
+        <label>Litres per day <input id="milkLitres" type="number" min="0" step="0.1" placeholder="e.g. 15"></label>
+        <label>Price per litre <input id="milkPrice" type="number" min="0" step="0.01" placeholder="e.g. 45"></label>
+        <div style="margin-top:8px" class="row"><button onclick="calcMilk()">Compute</button><div id="milkRes" class="small" style="margin-left:8px"></div></div>
+      </div>
+
+      <div class="card">
+        <h3>Quick Links</h3>
+        <p class="small">Use these for your Google Play / Hosting setup</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <a id="playStoreLink" class="small" href="#">📱 App listing (set your Play Store URL)</a>
+          <a href="https://pages.github.com/" target="_blank" class="small">🚀 Host on GitHub Pages</a>
+          <a href="https://www.netlify.com/" target="_blank" class="small">🌐 Host on Netlify</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Crop encyclopedia -->
+    <section style="margin-top:18px">
+      <div class="card">
+        <h3>Crop Encyclopedia</h3>
+        <p class="small">Search crops and click to view recommended sowing, seed rates and notes.</p>
+        <div style="margin-top:10px" class="row"><input id="cropSearch" placeholder="Search crop (e.g. wheat)" oninput="filterCrops()"></div>
+        <div id="cropList" style="margin-top:12px;display:grid;gap:10px">
+          <!-- sample items -->
+          <div class="crop card" data-name="wheat">
+            <div style="flex:1">
+              <div class="row"><strong>Wheat</strong><span style="margin-left:auto" class="badge">Rabi</span></div>
+              <div class="small">Seed rate: 100–125 kg/ha • Sowing: Nov–Dec • Notes: Good rotation crop.</div>
+            </div>
+            <div><button onclick="showCrop('Wheat','Recommended seed: 100-125 kg/ha. Sowing: Nov-Dec. Harvest: Apr-May. Soil: well drained loam.')">Details</button></div>
+          </div>
+
+          <div class="crop card" data-name="rice">
+            <div style="flex:1">
+              <div class="row"><strong>Rice</strong><span style="margin-left:auto" class="badge">Kharif</span></div>
+              <div class="small">Seed rate (broadcast): 80–100 kg/ha • Transplant as nursery seedlings.</div>
+            </div>
+            <div><button onclick="showCrop('Rice','Seed rate (broadcast): 80-100 kg/ha. Transplanting recommended in many systems. Water management is important.')">Details</button></div>
+          </div>
+
+          <div class="crop card" data-name="maize">
+            <div style="flex:1">
+              <div class="row"><strong>Maize</strong><span style="margin-left:auto" class="badge">Kharif/Rabi</span></div>
+              <div class="small">Seed rate: 18–25 kg/ha (as per spacing) • Sowing: Mar-Jun / Sep-Nov.</div>
+            </div>
+            <div><button onclick="showCrop('Maize','Seed rate: 18-25 kg/ha (depends on spacing). Ensure balanced fertilisation.')">Details</button></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Machinery -->
+    <section style="margin-top:18px">
+      <div class="card">
+        <h3>Machinery & Implements</h3>
+        <p class="small">List of common machines with short descriptions and approximate tasks.</p>
+        <div style="display:grid;gap:12px;margin-top:12px">
+          <div class="row card">
+            <img class="machine-img" src="https://via.placeholder.com/220x120?text=Tractor" alt="tractor">
+            <div style="flex:1">
+              <strong>Tractor</strong>
+              <div class="small">Power: 20–80 HP. Use for ploughing, hauling, and attachments (rotavator, seed drill).</div>
+            </div>
+          </div>
+
+          <div class="row card">
+            <img class="machine-img" src="https://via.placeholder.com/220x120?text=Seed+Drill" alt="seed drill">
+            <div style="flex:1">
+              <strong>Seed Drill</strong>
+              <div class="small">Sows seeds at correct depth and spacing — improves germination & reduces seed usage.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Notes and contact -->
+    <section style="margin-top:18px" class="grid" id="bottom">
+      <div class="card">
+        <h3>Farm Management Notes</h3>
+        <ul class="small">
+          <li>Do soil test at least once every 2–3 years to decide fertilizer dose.</li>
+          <li>Use certified seeds and follow recommended seed rates to avoid wastage.</li>
+          <li>Record daily milk yield and vet checks for animal health.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Contact / App Link</h3>
+        <p class="small">Add your Play Store URL below to link the app listing on this page.</p>
+        <label>Play Store URL <input id="playUrl" placeholder="https://play.google.com/store/apps/details?id=your.app.id"></label>
+        <div style="margin-top:8px" class="row"><button onclick="setPlay()">Save</button><div id="playSaved" class="small" style="margin-left:8px"></div></div>
+        <hr style="margin:12px 0">
+        <form onsubmit="event.preventDefault(); alert('Contact sent (demo)')">
+          <label>Name <input required></label>
+          <label>Email <input type="email" required></label>
+          <label>Message <textarea rows="3"></textarea></label>
+          <div style="margin-top:8px"><button type="submit">Send</button></div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container small">Made with ❤️ for farmers — edit this HTML to add more crops, local language support or connect to your backend.</div>
+  </footer>
+
+  <script>
+    // Seed calculator: required seed (kg) = area(ha) * seedRate(kg/ha)
+    function calcSeed(){
+      const area = parseFloat(document.getElementById('areaH').value)||0;
+      const rate = parseFloat(document.getElementById('seedRate').value)||0;
+      const required = +(area * rate).toFixed(2);
+      document.getElementById('seedRes').textContent = required ? required + ' kg required' : 'Enter area & seed rate';
+    }
+
+    // Milk income: daily and monthly
+    function calcMilk(){
+      const L = parseFloat(document.getElementById('milkLitres').value)||0;
+      const p = parseFloat(document.getElementById('milkPrice').value)||0;
+      const daily = +(L * p).toFixed(2);
+      const monthly = +(daily * 30).toFixed(2);
+      document.getElementById('milkRes').textContent = daily ? 'Daily: ₹'+daily+' • Monthly: ₹'+monthly : 'Enter litres and price';
+    }
+
+    function showCrop(title,info){
+      alert(title + '\n\n' + info);
+    }
+
+    function filterCrops(){
+      const q = document.getElementById('cropSearch').value.toLowerCase();
+      document.querySelectorAll('#cropList .crop').forEach(el=>{
+        const name = el.getAttribute('data-name')||'';
+        el.style.display = name.indexOf(q) === -1 ? 'none' : 'flex';
+      })
+    }
+
+    function setPlay(){
+      const url = document.getElementById('playUrl').value.trim();
+      const link = document.getElementById('playStoreLink');
+      if(!url){ document.getElementById('playSaved').textContent = 'Please paste URL'; return }
+      link.href = url; link.textContent = 'Open Play Store listing'; document.getElementById('playSaved').textContent = 'Saved ✔';
+    }
+  </script>
+</body>
+</html>
